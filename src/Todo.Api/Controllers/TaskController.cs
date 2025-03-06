@@ -1,11 +1,13 @@
 using System.Net;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Todo.Core.Entities;
 using Todo.Core.Models;
 using Todo.Data;
 
 namespace Todo.Api.Controllers;
 
+[Route("api/{controller}")]
 public class TaskController : Controller
 {
     private ApplicationDBContext _db;
@@ -14,20 +16,31 @@ public class TaskController : Controller
         _db = db;
     }
 
-    [HttpGet]
+    [HttpGet("Welcome")]
+    public IActionResult Welcome()
+    {
+        return Json("Welcome");
+    }
+
+    [HttpGet("GetAllChallenges")]
     public IActionResult GetAllChallenges()
     {
-        var listChallenges = ChallengesList();
+        var listChallenges = _db.Set<Challenge>().ToList();
+        //var listChallenges = ChallengesList();
 
         return Json(listChallenges);
     }
 
-    [HttpPost]
-    public IActionResult AddChallenge(Challenge challenge)
+    [HttpPost("AddChallenge")]
+    public IActionResult AddChallenge(Challenge challenge)// Это DTO, надо вывести в другой класс
     {
         if (ModelState.IsValid)
         {
-            _db.Set<Challenge>().Add(challenge);
+            var addedChallenge = challenge.ToEntity();
+            addedChallenge.Id = Guid.NewGuid();
+            addedChallenge.CreationDate = addedChallenge.CreationDate.ToOffset(new TimeSpan(0));
+
+            _db.Set<ChallengeEntity>().Add(addedChallenge);
             _db.SaveChanges();
         }
 
@@ -35,26 +48,10 @@ public class TaskController : Controller
 
         return Json(listChallenges);
     }
-
-    [HttpDelete]
-    public IActionResult DeleteChallenge(Guid id)
-    {
-        var selectedChallenge = _db.Set<Challenge>().Find(id);
-
-        if (selectedChallenge == null)
-            return NotFound();
-
-        _db.Set<Challenge>().Remove(selectedChallenge);
-        _db.SaveChanges();
-
-        var listChallenges = ChallengesList();
-
-        return Json(listChallenges); 
-    }
     
-    private List<Challenge> ChallengesList()
+    private List<ChallengeEntity> ChallengesList()
     {
-        var listData = _db.Set<Challenge>().ToList();
+        var listData = _db.Set<ChallengeEntity>().ToList();
 
         return listData;
     }
