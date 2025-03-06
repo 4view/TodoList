@@ -8,7 +8,7 @@ public class ChallengeEntity
     /// <summary>
     /// Уникальный 
     /// </summary>
-    public Guid Id { get; init; }
+    public Guid Id { get; set; }
 
     /// <summary>
     /// Сообщение в задание
