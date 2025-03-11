@@ -49,6 +49,23 @@ public class TaskController : Controller
         return Json(listChallenges);
     }
     
+    [HttpDelete("RemoveChallenge")]
+    public IActionResult RemoveChallenge(Guid challengeID)
+    {
+        var savedChallenges = ChallengesList();
+        var selectedChallenge = savedChallenges.Where(c => c.Id == challengeID);
+
+        if (selectedChallenge == null)
+        {
+            return NotFound();
+        }
+
+        _db.Remove(selectedChallenge);
+        _db.SaveChanges();
+
+        return Json(savedChallenges);
+    }
+
     private List<ChallengeEntity> ChallengesList()
     {
         var listData = _db.Set<ChallengeEntity>().ToList();
