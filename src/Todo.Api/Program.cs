@@ -3,7 +3,7 @@ using Todo.Data;
 
 var builder = WebApplication.CreateBuilder();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddNewtonsoftJson();
 
 builder.Services.AddDbContext<ApplicationDBContext>(
     o => o.UseNpgsql(builder.Configuration.GetConnectionString("TodoListDB"))
