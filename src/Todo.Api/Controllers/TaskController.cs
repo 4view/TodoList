@@ -1,5 +1,7 @@
 using System.Net;
+using Azure;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Todo.Core.Entities;
 using Todo.Core.Models;
@@ -50,20 +52,47 @@ public class TaskController : Controller
     }
     
     [HttpDelete("RemoveChallenge")]
-    public IActionResult RemoveChallenge(Guid challengeID)
+    public IActionResult RemoveChallenge(Guid id)
     {
         var savedChallenges = ChallengesList();
-        var selectedChallenge = savedChallenges.Where(c => c.Id == challengeID);
+        var selectedChallenge = savedChallenges.FirstOrDefault(c => c.Id == id);
 
         if (selectedChallenge == null)
         {
-            return NotFound();
+            return NotFound("Challenge not found");
         }
 
-        _db.Remove(selectedChallenge);
+        _db.Set<ChallengeEntity>().Remove(selectedChallenge);
         _db.SaveChanges();
 
         return Json(savedChallenges);
+    }
+
+    [HttpPut("UpdateChallenge/{id}")]
+    public IActionResult UpdateChallenge(
+        [FromBody] JsonPatchDocument<ChallengeEntity> patchDoc, Guid id
+    )
+    {
+        if (patchDoc != null)
+        {
+            var savedChallenges = ChallengesList();
+            var selectedChallenge = savedChallenges.FirstOrDefault(c => c.Id == id);
+
+            if (selectedChallenge == null)
+            {
+                return NotFound("Challenge not found");
+            }
+
+            patchDoc.ApplyTo(selectedChallenge, ModelState);
+
+            _db.SaveChanges();
+
+            return Json(savedChallenges);
+        }
+        else
+        {
+            return BadRequest(ModelState);
+        }        
     }
 
     private List<ChallengeEntity> ChallengesList()
